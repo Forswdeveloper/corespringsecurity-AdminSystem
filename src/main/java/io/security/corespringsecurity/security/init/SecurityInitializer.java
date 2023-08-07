@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class SecurityInitializer implements ApplicationRunner {
 
+    //ApplicationRunner : 스프링 부트 구동 시점에 특정 코드 실행
+
     @Autowired
     private RoleHierarchyService roleHierarchyService;
 
