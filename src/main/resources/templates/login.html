@@ -28,9 +28,9 @@
             success: function (data) {
                 console.log(data);
                 window.location = '/';
-
             },
             error : function(xhr, status, error) {
+                console.log(data);
                 console.log(error);
                 window.location = '/login?error=true&exception=' + xhr.responseText;
             }
