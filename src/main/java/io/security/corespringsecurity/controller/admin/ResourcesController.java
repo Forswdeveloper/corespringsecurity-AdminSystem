@@ -6,6 +6,7 @@ import io.security.corespringsecurity.domain.entity.Resources;
 import io.security.corespringsecurity.domain.entity.Role;
 import io.security.corespringsecurity.repository.RoleRepository;
 import io.security.corespringsecurity.security.metadatasource.UrlFilterInvocationSecurityMetadataSource;
+import io.security.corespringsecurity.service.MethodSecurityService;
 import io.security.corespringsecurity.service.ResourcesService;
 import io.security.corespringsecurity.service.RoleService;
 import org.modelmapper.ModelMapper;
@@ -33,7 +34,10 @@ public class ResourcesController {
 	private RoleService roleService;
 
 	@Autowired
-	private UrlFilterInvocationSecurityMetadataSource filterInvocationSecurityMetadataSource;
+	private UrlFilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource;
+
+	@Autowired
+	private MethodSecurityService methodSecurityService;
 
 	@GetMapping(value="/admin/resources")
 	public String getResources(Model model) throws Exception {
@@ -54,8 +58,13 @@ public class ResourcesController {
 		Resources resources = modelMapper.map(resourcesDto, Resources.class);
 		resources.setRoleSet(roles);
 
+		if("url".equals(resourcesDto.getResourceType())){
+			urlFilterInvocationSecurityMetadataSource.reload();
+		} else {
+			methodSecurityService.addMethodSecured(resourcesDto.getResourceName(),resourcesDto.getRoleName());
+		}
+
 		resourcesService.createResources(resources);
-		filterInvocationSecurityMetadataSource.reload();
 
 		return "redirect:/admin/resources";
 	}
@@ -76,7 +85,7 @@ public class ResourcesController {
 	}
 
 	@GetMapping(value="/admin/resources/{id}")
-	public String getResources(@PathVariable String id, Model model) throws Exception {
+	public String getResources(@PathVariable("id") String id, Model model) throws Exception {
 
 		List<Role> roleList = roleService.getRoles();
         model.addAttribute("roleList", roleList);
@@ -90,11 +99,16 @@ public class ResourcesController {
 	}
 
 	@GetMapping(value="/admin/resources/delete/{id}")
-	public String removeResources(@PathVariable String id, Model model) throws Exception {
+	public String removeResources(@PathVariable("id") String id, Model model) throws Exception {
 
 		Resources resources = resourcesService.getResources(Long.valueOf(id));
 		resourcesService.deleteResources(Long.valueOf(id));
-		filterInvocationSecurityMetadataSource.reload();
+
+		if("url".equals(resources.getResourceType())){
+			urlFilterInvocationSecurityMetadataSource.reload();
+		} else {
+			methodSecurityService.removeMethodSecured(resources.getResourceName());
+		}
 
 		return "redirect:/admin/resources";
 	}

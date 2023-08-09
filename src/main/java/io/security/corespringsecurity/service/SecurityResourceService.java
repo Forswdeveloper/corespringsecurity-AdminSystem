@@ -42,28 +42,28 @@ public class SecurityResourceService {
         return result;
     }
 
-    public LinkedHashMap<String, List<ConfigAttribute>> getMethodResourceList(){
+    public LinkedHashMap<String, List<ConfigAttribute>> getMethodResourceList() {
 
         //DB에서 권한과 자원을 가져와서 매핑
         LinkedHashMap<String, List<ConfigAttribute>> result = new LinkedHashMap<>();
         List<Resources> resourceList = resourcesRepository.findAllMethodResources();
-        resourceList.forEach(re -> {
-            //키 값 매핑
-            List<ConfigAttribute> configAttributeList = new ArrayList<>();
-
-            //자원과 권한은 1 : N 관계
-            re.getRoleSet().forEach(role -> {
-                configAttributeList.add(new SecurityConfig(role.getRoleName()));//Resource 하나에 여러개 권한 매핑
-            });
-            result.put(re.getResourceName(),configAttributeList);
-        });
-        return result;
+        return getStringListLinkedHashMap(resourceList);
     }
 
     public LinkedHashMap<String, List<ConfigAttribute>> getPointcutResourceList() {
         //DB에서 권한과 자원을 가져와서 매핑
         LinkedHashMap<String, List<ConfigAttribute>> result = new LinkedHashMap<>();
         List<Resources> resourceList = resourcesRepository.findAllPointcutResources();
+        return getStringListLinkedHashMap(resourceList);
+    }
+
+    public List<String> getAccessIpList() {
+        List<String> accessIpList = accessIpRepository.findAll().stream().map(accessIp -> accessIp.getIpAddress()).collect(Collectors.toList());
+        return accessIpList;
+    }
+
+    public LinkedHashMap<String, List<ConfigAttribute>> getStringListLinkedHashMap(List<Resources> resourceList) {
+        LinkedHashMap<String, List<ConfigAttribute>> resourceResult = new LinkedHashMap<>();
         resourceList.forEach(re -> {
             //키 값 매핑
             List<ConfigAttribute> configAttributeList = new ArrayList<>();
@@ -72,13 +72,8 @@ public class SecurityResourceService {
             re.getRoleSet().forEach(role -> {
                 configAttributeList.add(new SecurityConfig(role.getRoleName()));//Resource 하나에 여러개 권한 매핑
             });
-            result.put(re.getResourceName(),configAttributeList);
+            resourceResult.put(re.getResourceName(),configAttributeList);
         });
-        return result;
-    }
-
-    public List<String> getAccessIpList() {
-        List<String> accessIpList = accessIpRepository.findAll().stream().map(accessIp -> accessIp.getIpAddress()).collect(Collectors.toList());
-        return accessIpList;
+        return resourceResult;
     }
 }
